@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+import json
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+# Colors for terminal output
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+
+def log(message, color=Colors.OKBLUE):
+    print(f"{color}{Colors.BOLD}[*] {message}{Colors.ENDC}")
+
+def error(message):
+    print(f"{Colors.FAIL}{Colors.BOLD}[!] Error: {message}{Colors.ENDC}")
+    sys.exit(1)
+
+def run_command(command, cwd=None, env=None):
+    try:
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True,
+            text=True,
+            cwd=cwd,
+            env=env
+        )
+        for line in process.stdout:
+            print(line, end='')
+        process.wait()
+        if process.returncode != 0:
+            return False
+        return True
+    except Exception as e:
+        error(str(e))
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="html2apk-cli: A professional tool to convert web projects (including React/Vite/TS) to Android APK.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  html2apk-cli ./my-web-app --name "My Awesome App" --id com.example.myapp
+  html2apk-cli ./react-project --release --icon ./assets/logo.png
+        """
+    )
+
+    parser.add_argument("source", help="Path to the HTML source folder or Node.js project")
+    parser.add_argument("--name", default="MyHTMLApp", help="Application name (default: MyHTMLApp)")
+    parser.add_argument("--id", default="com.example.htmlapp", help="Package ID (default: com.example.htmlapp)")
+    parser.add_argument("--version", default="1.0.0", help="Application version (default: 1.0.0)")
+    parser.add_argument("--icon", help="Path to the application icon (PNG)")
+    parser.add_argument("--release", action="store_true", help="Build as release (default: debug)")
+    parser.add_argument("--output", default="dist-apk", help="Output directory for the APK (default: dist-apk)")
+    parser.add_argument("--java", help="Path to JAVA_HOME (e.g., /usr/lib/jvm/java-17-openjdk-amd64)")
+    parser.add_argument("--skip-build", action="store_true", help="Skip npm build step for Node projects")
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(0)
+
+    args = parser.parse_args()
+
+    # Environment setup
+    custom_env = os.environ.copy()
+    
+    # Auto-detect Android SDK if not set
+    if "ANDROID_HOME" not in custom_env:
+        possible_sdk = Path.home() / "Android" / "Sdk"
+        if possible_sdk.exists():
+            custom_env["ANDROID_HOME"] = str(possible_sdk)
+            custom_env["PATH"] = f"{custom_env['PATH']}:{possible_sdk}/platform-tools:{possible_sdk}/cmdline-tools/latest/bin"
+
+    if args.java:
+        custom_env["JAVA_HOME"] = args.java
+        custom_env["PATH"] = f"{os.path.join(args.java, 'bin')}:{custom_env['PATH']}"
+    elif "JAVA_HOME" not in custom_env:
+        java_17 = "/usr/lib/jvm/java-17-openjdk-amd64"
+        if os.path.exists(java_17):
+            log(f"Auto-selecting Java 17 for better Gradle compatibility...", Colors.OKCYAN)
+            custom_env["JAVA_HOME"] = java_17
+            custom_env["PATH"] = f"{java_17}/bin:{custom_env['PATH']}"
+
+    source_path = Path(args.source).resolve()
+    if not source_path.is_dir():
+        error(f"Source path '{args.source}' is not a directory.")
+
+    # 1. Node.js Project Detection & Build
+    package_json_path = source_path / "package.json"
+    actual_web_assets_path = source_path
+
+    if package_json_path.exists() and not args.skip_build:
+        log("Node.js project detected. Checking for build script...", Colors.OKCYAN)
+        try:
+            with open(package_json_path, 'r') as f:
+                pkg = json.load(f)
+            
+            if "scripts" in pkg and "build" in pkg["scripts"]:
+                log("Running 'npm install'...", Colors.OKCYAN)
+                if not run_command("npm install", cwd=source_path):
+                    error("npm install failed.")
+                
+                log("Running 'npm run build'...", Colors.OKCYAN)
+                if not run_command("npm run build", cwd=source_path):
+                    error("npm run build failed.")
+                
+                # Detect build output directory
+                possible_dirs = ["dist", "build", "out", "public"]
+                found_out = False
+                for d in possible_dirs:
+                    if (source_path / d).is_dir() and (source_path / d / "index.html").exists():
+                        actual_web_assets_path = source_path / d
+                        log(f"Detected build output at: {d}/", Colors.OKGREEN)
+                        found_out = True
+                        break
+                
+                if not found_out:
+                    error("Could not find build output directory containing 'index.html' (tried dist, build, out, public).")
+            else:
+                log("No 'build' script found in package.json. Assuming direct asset folder.", Colors.WARNING)
+        except Exception as e:
+            log(f"Error reading package.json: {e}. Proceeding as standard folder.", Colors.WARNING)
+
+    if not (actual_web_assets_path / "index.html").exists():
+        error(f"Could not find 'index.html' in {actual_web_assets_path}. Ensure the project is built or index.html exists.")
+
+    project_name = "cordova_project"
+    project_path = Path.cwd() / project_name
+    output_path = Path(args.output).resolve()
+
+    # 2. Cleanup old project
+    if project_path.exists():
+        log(f"Cleaning up existing project folder...")
+        shutil.rmtree(project_path)
+
+    # 3. Create Cordova Project
+    log(f"Creating Cordova project: {args.name} ({args.id})...")
+    if not run_command(f"cordova create \"{project_name}\" \"{args.id}\" \"{args.name}\"", env=custom_env):
+        error("Failed to create Cordova project.")
+
+    # 4. Copy Web Assets
+    log(f"Copying web assets from {actual_web_assets_path.name}/ to www/ folder...")
+    www_path = project_path / "www"
+    for item in www_path.iterdir():
+        if item.is_dir(): shutil.rmtree(item)
+        else: item.unlink()
+    
+    for item in actual_web_assets_path.iterdir():
+        if item.name == project_name: continue
+        if item.is_dir(): shutil.copytree(item, www_path / item.name)
+        else: shutil.copy2(item, www_path / item.name)
+
+    # 5. Configure config.xml
+    log("Configuring config.xml...")
+    config_xml = project_path / "config.xml"
+    ET.register_namespace('', "http://www.w3.org/ns/widgets")
+    tree = ET.parse(config_xml)
+    root = tree.getroot()
+    root.set('version', args.version)
+    if args.icon:
+        icon_src = Path(args.icon).resolve()
+        if icon_src.exists():
+            log(f"Setting application icon: {args.icon}")
+            shutil.copy2(icon_src, project_path / "icon.png")
+            ET.SubElement(root, 'icon', {'src': 'icon.png'})
+    tree.write(config_xml, encoding='utf-8', xml_declaration=True)
+
+    # 6. Add Platform
+    log("Adding Android platform...")
+    if not run_command("cordova platform add android", cwd=project_path, env=custom_env):
+        error("Failed to add Android platform.")
+
+    # 7. Build APK
+    build_type = "--release" if args.release else "--debug"
+    log(f"Building APK ({'release' if args.release else 'debug'})...")
+    if not run_command(f"cordova build android {build_type}", cwd=project_path, env=custom_env):
+        error("Build failed.")
+
+    # 8. Locate and Move Output
+    log("Locating built APK...")
+    mode = "release" if args.release else "debug"
+    apk_dir = project_path / "platforms" / "android" / "app" / "build" / "outputs" / "apk" / mode
+    apks = list(apk_dir.glob("*.apk"))
+    if not apks: error("Could not find generated APK.")
+
+    output_path.mkdir(parents=True, exist_ok=True)
+    final_apk_name = f"{args.name.replace(' ', '_')}_{mode}.apk"
+    shutil.copy2(apks[0], output_path / final_apk_name)
+
+    log(f"Success! APK generated: {output_path / final_apk_name}", Colors.OKGREEN)
+
+if __name__ == "__main__":
+    main()
