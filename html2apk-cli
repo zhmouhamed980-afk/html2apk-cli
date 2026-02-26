@@ -10,9 +10,6 @@ import termios
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-# ─────────────────────────────────────────────
-# COLORS
-# ─────────────────────────────────────────────
 class C:
     HEADER  = '\033[95m'
     BLUE    = '\033[94m'
@@ -27,128 +24,97 @@ class C:
 def clr(text, *colors):
     return ''.join(colors) + str(text) + C.RESET
 
-def log(msg, color=C.BLUE):   print(clr(f"[*] {msg}", C.BOLD, color))
-def ok(msg):                   print(clr(f"[✓] {msg}", C.BOLD, C.GREEN))
-def warn(msg):                 print(clr(f"[!] {msg}", C.BOLD, C.YELLOW))
-def err(msg):                  print(clr(f"[✗] {msg}", C.BOLD, C.RED)); sys.exit(1)
+def log(msg, color=C.BLUE):  print(clr(f"[*] {msg}", C.BOLD, color))
+def ok(msg):                  print(clr(f"[✓] {msg}", C.BOLD, C.GREEN))
+def warn(msg):                print(clr(f"[!] {msg}", C.BOLD, C.YELLOW))
+def err(msg):                 print(clr(f"[✗] {msg}", C.BOLD, C.RED)); sys.exit(1)
 
-# ─────────────────────────────────────────────
-# PERMISSIONS TABLE
-# ─────────────────────────────────────────────
 PERMISSIONS = [
-    # (key, label, description, android_perms, plugin)
-    ("storage",           "📁 Storage",             "Read & write files to external storage",
-     ["android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"],
+    ("storage",          "📁 Storage",             "Read & write files to external storage",
+     ["android.permission.READ_EXTERNAL_STORAGE","android.permission.WRITE_EXTERNAL_STORAGE"],
      "cordova-plugin-file"),
-
-    ("manage-storage",    "📂 Manage Storage",      "Full storage access — any folder (Android 11+)",
+    ("manage-storage",   "📂 Manage Storage",      "Full storage access — any folder (Android 11+)",
      ["android.permission.MANAGE_EXTERNAL_STORAGE"],
      "cordova-plugin-file"),
-
-    ("camera",            "📷 Camera",              "Take photos and record video",
+    ("camera",           "📷 Camera",              "Take photos and record video",
      ["android.permission.CAMERA"],
      "cordova-plugin-camera"),
-
-    ("microphone",        "🎤 Microphone",          "Record audio",
+    ("microphone",       "🎤 Microphone",          "Record audio",
      ["android.permission.RECORD_AUDIO"],
      "cordova-plugin-media"),
-
-    ("media-images",      "🖼  Media Images",        "Read images from gallery (Android 13+)",
+    ("media-images",     "🖼  Media Images",        "Read images from gallery (Android 13+)",
      ["android.permission.READ_MEDIA_IMAGES"],
      "cordova-plugin-file"),
-
-    ("media-video",       "🎬 Media Video",         "Read videos from gallery (Android 13+)",
+    ("media-video",      "🎬 Media Video",         "Read videos from gallery (Android 13+)",
      ["android.permission.READ_MEDIA_VIDEO"],
      "cordova-plugin-file"),
-
-    ("media-audio",       "🎵 Media Audio",         "Read audio files (Android 13+)",
+    ("media-audio",      "🎵 Media Audio",         "Read audio files (Android 13+)",
      ["android.permission.READ_MEDIA_AUDIO"],
      "cordova-plugin-file"),
-
-    ("location",          "📍 Location",            "GPS precise & approximate location",
-     ["android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"],
+    ("location",         "📍 Location",            "GPS precise & approximate location",
+     ["android.permission.ACCESS_FINE_LOCATION","android.permission.ACCESS_COARSE_LOCATION"],
      "cordova-plugin-geolocation"),
-
-    ("location-bg",       "🗺  Background Location", "Location even when app is closed (Android 10+)",
+    ("location-bg",      "🗺  Background Location", "Location even when app is closed (Android 10+)",
      ["android.permission.ACCESS_BACKGROUND_LOCATION"],
      "cordova-plugin-geolocation"),
-
-    ("internet",          "🌐 Internet",            "Full internet access",
+    ("internet",         "🌐 Internet",            "Full internet access",
      ["android.permission.INTERNET"],
      None),
-
-    ("network-state",     "📶 Network State",       "Check if device is connected to internet",
+    ("network-state",    "📶 Network State",       "Check if device is connected to internet",
      ["android.permission.ACCESS_NETWORK_STATE"],
      "cordova-plugin-network-information"),
-
-    ("wifi-state",        "📡 WiFi State",          "Check WiFi connection status",
+    ("wifi-state",       "📡 WiFi State",          "Check WiFi connection status",
      ["android.permission.ACCESS_WIFI_STATE"],
      None),
-
-    ("bluetooth",         "🔵 Bluetooth",           "Connect to Bluetooth devices",
-     ["android.permission.BLUETOOTH", "android.permission.BLUETOOTH_ADMIN"],
+    ("bluetooth",        "🔵 Bluetooth",           "Connect to Bluetooth devices",
+     ["android.permission.BLUETOOTH","android.permission.BLUETOOTH_ADMIN"],
      None),
-
-    ("bluetooth-scan",    "🔍 Bluetooth Scan",      "Scan for nearby Bluetooth devices (Android 12+)",
+    ("bluetooth-scan",   "🔍 Bluetooth Scan",      "Scan for nearby Bluetooth devices (Android 12+)",
      ["android.permission.BLUETOOTH_SCAN"],
      None),
-
-    ("nfc",               "📲 NFC",                 "Near Field Communication",
+    ("nfc",              "📲 NFC",                 "Near Field Communication",
      ["android.permission.NFC"],
      None),
-
-    ("contacts",          "👥 Contacts",            "Read & write device contacts",
-     ["android.permission.READ_CONTACTS", "android.permission.WRITE_CONTACTS"],
+    ("contacts",         "👥 Contacts",            "Read & write device contacts",
+     ["android.permission.READ_CONTACTS","android.permission.WRITE_CONTACTS"],
      "cordova-plugin-contacts"),
-
-    ("calendar",          "📅 Calendar",            "Read & write calendar events",
-     ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR"],
+    ("calendar",         "📅 Calendar",            "Read & write calendar events",
+     ["android.permission.READ_CALENDAR","android.permission.WRITE_CALENDAR"],
      None),
-
-    ("sms",               "💬 SMS",                 "Send & receive SMS messages",
-     ["android.permission.SEND_SMS", "android.permission.RECEIVE_SMS", "android.permission.READ_SMS"],
+    ("sms",              "💬 SMS",                 "Send & receive SMS messages",
+     ["android.permission.SEND_SMS","android.permission.RECEIVE_SMS","android.permission.READ_SMS"],
      None),
-
-    ("phone-state",       "📞 Phone State",         "Read phone number and call state",
+    ("phone-state",      "📞 Phone State",         "Read phone number and call state",
      ["android.permission.READ_PHONE_STATE"],
      None),
-
-    ("notifications",     "🔔 Notifications",       "Post local notifications (Android 13+)",
+    ("notifications",    "🔔 Notifications",       "Post local notifications (Android 13+)",
      ["android.permission.POST_NOTIFICATIONS"],
      "cordova-plugin-local-notification"),
-
-    ("vibrate",           "📳 Vibrate",             "Vibrate the device",
+    ("vibrate",          "📳 Vibrate",             "Vibrate the device",
      ["android.permission.VIBRATE"],
      "cordova-plugin-vibration"),
-
-    ("sensors",           "❤  Body Sensors",        "Access heart rate and body sensors",
+    ("sensors",          "❤  Body Sensors",        "Access heart rate and body sensors",
      ["android.permission.BODY_SENSORS"],
      None),
-
-    ("activity",          "🏃 Activity Recognition","Detect walking/running etc. (Android 10+)",
+    ("activity",         "🏃 Activity",            "Detect walking/running (Android 10+)",
      ["android.permission.ACTIVITY_RECOGNITION"],
      None),
-
-    ("wake-lock",         "💡 Wake Lock",           "Prevent screen from turning off",
+    ("wake-lock",        "💡 Wake Lock",           "Prevent screen from turning off",
      ["android.permission.WAKE_LOCK"],
      None),
-
-    ("flashlight",        "🔦 Flashlight",          "Control the camera flashlight",
+    ("flashlight",       "🔦 Flashlight",          "Control the camera flashlight",
      ["android.permission.FLASHLIGHT"],
      None),
-
-    ("biometric",         "🔐 Biometric",           "Fingerprint & face authentication",
-     ["android.permission.USE_BIOMETRIC", "android.permission.USE_FINGERPRINT"],
+    ("biometric",        "🔐 Biometric",           "Fingerprint & face authentication",
+     ["android.permission.USE_BIOMETRIC","android.permission.USE_FINGERPRINT"],
      None),
-
-    ("install-packages",  "📦 Install Packages",    "Install other APK files",
+    ("install-packages", "📦 Install Packages",    "Install other APK files",
      ["android.permission.REQUEST_INSTALL_PACKAGES"],
      None),
 ]
 
-# ─────────────────────────────────────────────
-# TERMINAL HELPERS
-# ─────────────────────────────────────────────
+# ── Terminal helpers ─────────────────────────────────────────────────────────
+
 def getch():
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
@@ -165,104 +131,102 @@ def getch():
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
-def clear_lines(n):
-    for _ in range(n):
-        sys.stdout.write('\x1b[1A\x1b[2K')
-    sys.stdout.flush()
-
 def hide_cursor(): sys.stdout.write('\x1b[?25l'); sys.stdout.flush()
 def show_cursor(): sys.stdout.write('\x1b[?25h'); sys.stdout.flush()
+
+def redraw(lines_to_erase, new_lines):
+    """Go up N lines, clear to end of screen, print new content."""
+    if lines_to_erase > 0:
+        sys.stdout.write(f'\x1b[{lines_to_erase}A')  # cursor up
+    sys.stdout.write('\x1b[J')                        # clear from cursor to end
+    sys.stdout.write('\n'.join(new_lines))
+    sys.stdout.write('\n')
+    sys.stdout.flush()
 
 def prompt_input(question, default=None):
     hint = f" {clr(f'[{default}]', C.DIM)}" if default else ""
     val  = input(f"  {clr('→', C.CYAN, C.BOLD)} {clr(question, C.BOLD)}{hint}: ").strip()
     return val if val else default
 
-# ─────────────────────────────────────────────
-# PERMISSIONS SELECTOR (TUI)
-# ─────────────────────────────────────────────
+# ── Permissions selector ─────────────────────────────────────────────────────
+
 def permissions_selector():
     selected   = [False] * len(PERMISSIONS)
     cursor     = 0
     visible    = min(len(PERMISSIONS), 14)
     scroll_top = 0
 
-    def render():
-        lines = []
-        lines.append(clr("\n  ┌─ Select Permissions ───────────────────────────────────────────────┐", C.CYAN, C.BOLD))
-        lines.append(clr("  │  ↑↓ move   SPACE toggle   A select-all   N deselect-all   ENTER done │", C.DIM))
-        lines.append(clr("  └────────────────────────────────────────────────────────────────────┘", C.CYAN, C.BOLD))
+    def build_lines():
+        out = []
+        out.append(clr("  ┌─ Select Permissions ─────────────────────────────────────────────┐", C.CYAN, C.BOLD))
+        out.append(clr("  │  ↑↓ move  SPACE toggle  A all  N none  ENTER confirm             │", C.DIM))
+        out.append(clr("  └──────────────────────────────────────────────────────────────────┘", C.CYAN, C.BOLD))
 
         for i in range(scroll_top, min(scroll_top + visible, len(PERMISSIONS))):
             _, label, desc, _, _ = PERMISSIONS[i]
-            if selected[i]:
-                box = clr("[✓]", C.GREEN, C.BOLD)
-            else:
-                box = clr("[ ]", C.DIM)
-
+            box = clr("[✓]", C.GREEN, C.BOLD) if selected[i] else clr("[ ]", C.DIM)
             if i == cursor:
-                line = clr(f"  ▶ {box} {label:<23}", C.CYAN, C.BOLD) + clr(f" {desc}", C.CYAN)
+                out.append(clr(f"  ▶ {box} {label:<24}", C.CYAN, C.BOLD) + clr(desc, C.CYAN))
             else:
-                line = f"    {box} {clr(label, C.BOLD):<23}{clr(f' {desc}', C.DIM)}"
-            lines.append(line)
+                out.append(f"    {box} {clr(label, C.BOLD):<24}{clr(desc, C.DIM)}")
 
-        if len(PERMISSIONS) > visible:
-            pct = int((scroll_top / max(1, len(PERMISSIONS) - visible)) * 100)
-            lines.append(clr(f"\n  Showing {scroll_top+1}–{min(scroll_top+visible, len(PERMISSIONS))} of {len(PERMISSIONS)}  ({pct}%)", C.DIM))
+        total   = len(PERMISSIONS)
+        end_idx = min(scroll_top + visible, total)
+        if total > visible:
+            pct = int(scroll_top / max(1, total - visible) * 100)
+            out.append(clr(f"  {scroll_top+1}–{end_idx} of {total}  ({pct}%)", C.DIM))
         else:
-            lines.append("")
+            out.append("")
 
         count = sum(selected)
-        lines.append(clr(f"\n  ✔ {count} permission(s) selected", C.YELLOW, C.BOLD))
-        return lines
+        out.append(clr(f"  ✔ {count} permission(s) selected", C.YELLOW, C.BOLD))
+        return out
 
     hide_cursor()
-    lines = render()
-    print('\n'.join(lines))
-    n = len(lines)
+    current_lines = build_lines()
+    print('\n'.join(current_lines))
 
     try:
         while True:
             ch = getch()
+            prev_len = len(current_lines)
 
-            if ch == '\x1b[A':   # Up
+            if ch == '\x1b[A':        # Up arrow
                 cursor = max(0, cursor - 1)
                 if cursor < scroll_top:
                     scroll_top = cursor
 
-            elif ch == '\x1b[B': # Down
+            elif ch == '\x1b[B':      # Down arrow
                 cursor = min(len(PERMISSIONS) - 1, cursor + 1)
                 if cursor >= scroll_top + visible:
                     scroll_top = cursor - visible + 1
 
-            elif ch == ' ':      # Toggle
+            elif ch == ' ':           # Toggle
                 selected[cursor] = not selected[cursor]
 
-            elif ch in ('a', 'A'):
+            elif ch in ('a', 'A'):    # All
                 selected = [True]  * len(PERMISSIONS)
 
-            elif ch in ('n', 'N'):
+            elif ch in ('n', 'N'):    # None
                 selected = [False] * len(PERMISSIONS)
 
-            elif ch in ('\r', '\n'):
+            elif ch in ('\r', '\n'):  # Confirm
                 break
 
-            elif ch in ('q', 'Q', '\x1b'):
+            elif ch in ('q', '\x1b'): # Quit
                 selected = [False] * len(PERMISSIONS)
                 break
 
-            clear_lines(n)
-            lines = render()
-            print('\n'.join(lines))
-            n = len(lines)
+            current_lines = build_lines()
+            redraw(prev_len, current_lines)
+
     finally:
         show_cursor()
 
     return [PERMISSIONS[i] for i, s in enumerate(selected) if s]
 
-# ─────────────────────────────────────────────
-# BUILD HELPERS
-# ─────────────────────────────────────────────
+# ── Cordova helpers ──────────────────────────────────────────────────────────
+
 def run_command(command, cwd=None, env=None):
     try:
         process = subprocess.Popen(
@@ -309,29 +273,28 @@ def inject_permissions_into_manifest(project_path, android_perms):
         tree.write(manifest, encoding='utf-8', xml_declaration=True)
         ok(f"Injected {added} permission(s) into AndroidManifest.xml")
 
-# ─────────────────────────────────────────────
-# WIZARD
-# ─────────────────────────────────────────────
+# ── Wizard ───────────────────────────────────────────────────────────────────
+
 def run_wizard(source_path):
     print(clr("\n  ╔══════════════════════════════════════════╗", C.CYAN, C.BOLD))
     print(clr("  ║       html2apk-cli  —  Setup Wizard      ║", C.CYAN, C.BOLD))
     print(clr("  ╚══════════════════════════════════════════╝\n", C.CYAN, C.BOLD))
 
-    folder_name = source_path.name.replace("-", " ").replace("_", " ").title()
+    folder_name = source_path.name.replace("-"," ").replace("_"," ").title()
     pkg_default = f"com.example.{source_path.name.lower().replace('-','').replace('_','')}"
 
     app_name = prompt_input("App name",   default=folder_name)
     app_id   = prompt_input("Package ID", default=pkg_default)
     version  = prompt_input("Version",    default="1.0.0")
 
-    print(f"\n  {clr('→', C.CYAN, C.BOLD)} {clr('Icon path (PNG)', C.BOLD)} {clr('[leave blank for default]', C.DIM)}: ", end="")
+    print(f"\n  {clr('→', C.CYAN, C.BOLD)} {clr('Icon path (PNG)', C.BOLD)} {clr('[leave blank for default]', C.DIM)}: ", end="", flush=True)
     icon_raw  = input().strip()
     icon_path = Path(icon_raw).resolve() if icon_raw else None
     if icon_path and not icon_path.exists():
         warn(f"Icon '{icon_raw}' not found — using default.")
         icon_path = None
 
-    print(f"\n  {clr('⚙  Select permissions for your app:', C.BOLD, C.YELLOW)}")
+    print(f"\n  {clr('⚙  Select permissions for your app:', C.BOLD, C.YELLOW)}\n")
     chosen_perms = permissions_selector()
 
     print(f"\n  {clr('Build type:', C.BOLD)}")
@@ -349,44 +312,39 @@ def run_wizard(source_path):
         "perms":   chosen_perms,
     }
 
-# ─────────────────────────────────────────────
-# MAIN
-# ─────────────────────────────────────────────
+# ── Main ─────────────────────────────────────────────────────────────────────
+
 def main():
     parser = argparse.ArgumentParser(
         description="html2apk-cli: Convert web projects to Android APK with interactive wizard.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  html2apk-cli ./my-web-app                       # Interactive wizard
-  html2apk-cli ./my-app --no-wizard \\              # Non-interactive
-      --name "My App" --id com.me.app \\
-      --permissions storage camera internet
+  html2apk-cli ./my-web-app
+  html2apk-cli ./my-app --no-wizard --name "My App" --id com.me.app --permissions storage camera
         """
     )
-    parser.add_argument("source",         help="Path to the project folder")
-    parser.add_argument("--output",       default="dist-apk")
-    parser.add_argument("--java",         help="Path to JAVA_HOME")
-    parser.add_argument("--skip-build",   action="store_true")
-    parser.add_argument("--no-wizard",    action="store_true", help="Skip wizard, use flags")
-    parser.add_argument("--name",         default=None)
-    parser.add_argument("--id",           default=None)
-    parser.add_argument("--version",      default="1.0.0")
-    parser.add_argument("--icon",         default=None)
-    parser.add_argument("--release",      action="store_true")
-    parser.add_argument("--permissions",  nargs="+", metavar="PERM")
+    parser.add_argument("source",        help="Path to the project folder")
+    parser.add_argument("--output",      default="dist-apk")
+    parser.add_argument("--java",        help="Path to JAVA_HOME")
+    parser.add_argument("--skip-build",  action="store_true")
+    parser.add_argument("--no-wizard",   action="store_true")
+    parser.add_argument("--name",        default=None)
+    parser.add_argument("--id",          default=None)
+    parser.add_argument("--version",     default="1.0.0")
+    parser.add_argument("--icon",        default=None)
+    parser.add_argument("--release",     action="store_true")
+    parser.add_argument("--permissions", nargs="+", metavar="PERM")
 
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(0)
 
     args = parser.parse_args()
-
     source_path = Path(args.source).resolve()
     if not source_path.is_dir():
         err(f"'{args.source}' is not a directory.")
 
-    # ── Config ──────────────────────────────
     if args.no_wizard:
         folder_name = source_path.name.replace("-"," ").replace("_"," ").title()
         keys_map    = {p[0]: p for p in PERMISSIONS}
@@ -406,7 +364,7 @@ Examples:
     else:
         config = run_wizard(source_path)
 
-    # ── Summary ─────────────────────────────
+    # Summary
     print(clr("\n  ─────────────────────────────────────────", C.DIM))
     print(clr("  Build Summary", C.BOLD, C.HEADER))
     print(clr("  ─────────────────────────────────────────", C.DIM))
@@ -415,7 +373,7 @@ Examples:
     print(f"  Version    : {clr(config['version'], C.BOLD)}")
     print(f"  Icon       : {clr(str(config['icon']) if config['icon'] else 'Default', C.BOLD)}")
     print(f"  Build      : {clr('Release' if config['release'] else 'Debug', C.BOLD)}")
-    perm_labels = ", ".join(p[1].split(" ",1)[1] for p in config["perms"]) if config["perms"] else "None"
+    perm_labels = ", ".join(p[1].split(" ",1)[1].strip() for p in config["perms"]) if config["perms"] else "None"
     print(f"  Permissions: {clr(perm_labels, C.BOLD)}")
     print(clr("  ─────────────────────────────────────────\n", C.DIM))
 
@@ -425,7 +383,7 @@ Examples:
         sys.exit(0)
     print()
 
-    # ── Environment ─────────────────────────
+    # Environment
     custom_env = os.environ.copy()
     if "ANDROID_HOME" not in custom_env:
         sdk = Path.home() / "Android" / "Sdk"
@@ -443,7 +401,7 @@ Examples:
             custom_env["JAVA_HOME"] = java17
             custom_env["PATH"] = f"{java17}/bin:{custom_env['PATH']}"
 
-    # ── Node build ──────────────────────────
+    # Node build
     actual_assets = source_path
     pkg_json = source_path / "package.json"
     if pkg_json.exists() and not args.skip_build:
@@ -456,7 +414,7 @@ Examples:
                 if not run_command("npm install", cwd=source_path): err("npm install failed.")
                 log("npm run build...")
                 if not run_command("npm run build", cwd=source_path): err("npm run build failed.")
-                for d in ["dist", "build", "out", "public", "output"]:
+                for d in ["dist","build","out","public","output"]:
                     c = source_path / d
                     if c.is_dir() and (c / "index.html").exists():
                         actual_assets = c
@@ -472,7 +430,7 @@ Examples:
     if not (actual_assets / "index.html").exists():
         err(f"No index.html in {actual_assets}")
 
-    # ── Cordova ─────────────────────────────
+    # Cordova
     project_name = "cordova_project"
     project_path = Path.cwd() / project_name
     output_path  = Path(args.output).resolve()
@@ -493,7 +451,6 @@ Examples:
         if item.name == project_name: continue
         shutil.copytree(item, www / item.name) if item.is_dir() else shutil.copy2(item, www / item.name)
 
-    # ── config.xml ──────────────────────────
     log("Configuring config.xml...")
     config_xml = project_path / "config.xml"
     ET.register_namespace('', "http://www.w3.org/ns/widgets")
@@ -518,13 +475,11 @@ Examples:
 
     tree.write(config_xml, encoding='utf-8', xml_declaration=True)
 
-    # ── Platform ────────────────────────────
     log("Adding Android platform...")
     if not run_command("cordova platform add android", cwd=project_path, env=custom_env):
         err("Failed to add Android platform.")
 
-    # ── Plugins ─────────────────────────────
-    for plugin in list(set(["cordova-plugin-whitelist"] + all_plugins)):
+    for plugin in list(set(all_plugins)):
         log(f"Installing plugin: {plugin}...", C.CYAN)
         if not run_command(f"cordova plugin add {plugin}", cwd=project_path, env=custom_env):
             warn(f"Plugin '{plugin}' failed — continuing.")
@@ -532,13 +487,11 @@ Examples:
     if all_android_perms:
         inject_permissions_into_manifest(project_path, all_android_perms)
 
-    # ── Build APK ───────────────────────────
     build_type = "--release" if config["release"] else "--debug"
     log("Building APK...", C.CYAN)
     if not run_command(f"cordova build android {build_type}", cwd=project_path, env=custom_env):
         err("Build failed.")
 
-    # ── Output ──────────────────────────────
     mode    = "release" if config["release"] else "debug"
     apk_dir = project_path / "platforms" / "android" / "app" / "build" / "outputs" / "apk" / mode
     apks    = list(apk_dir.glob("*.apk"))
